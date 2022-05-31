@@ -40,7 +40,6 @@ def process_events(ical_path: str):
             special_holidays += days
         if event.summary.startswith("Working from"):
             foreign_workdays += days
-        print(f"Event: {event.summary}, {event.start} - {event.end} ({days} days)")
 
     non_working_days = personal_holiday + sick_days + special_holidays
 
