@@ -8,7 +8,7 @@ import argparse
 
 def process_events(ical_path: str):
     tax_year_start = datetime(2021, 4, 6)
-    tax_year_end = tax_year_start + relativedelta(years=1)
+    tax_year_end = tax_year_start + relativedelta(years=1) - relativedelta(minutes=1)
     total_days_in_year = 365
     total_working_days = 255
 
