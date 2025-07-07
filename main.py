@@ -7,50 +7,32 @@ import argparse
 
 
 def process_events(ical_path: str):
-    tax_year_start = datetime(2021, 4, 6)
-    tax_year_end = tax_year_start + relativedelta(years=1) - relativedelta(minutes=1)
-    total_days_in_year = 365
-    total_working_days = 255
+    track_start_date = datetime(2020, 1, 1)
+    track_end_date = datetime(2025, 11, 1)
 
-    event_list = events(file=ical_path, fix_apple=True, start=tax_year_start, end=tax_year_end)
+    event_list = events(file=ical_path, fix_apple=True,
+                        start=track_start_date, end=track_end_date)
     event_list.sort()
-    print(f"Found {len(event_list)} events")
 
-    bank_holidays = 0
-    sick_days = 0
-    special_holidays = 0
-    foreign_workdays = 0
-    nights_outside_uk = 0
-    personal_holiday = 0
-
+    print("Country visited\tDeparted UK\tArrived UK\tReason for travel (Business / Personal)\tFull days absent")
     for event in event_list:
         if event is None:
             event = Event()
         days = (event.end - event.start).days
-        if event.summary.startswith("Travel"):
-            nights_outside_uk += days
+        title: str = event.summary
+        if title.startswith("Travel"):
+            details = title[len("Travel: "):]
+            location, extra = details.split(
+                "--", 1) if details.find("--") > 0 else (details, "")
+            depart = event.start.strftime('%d/%m/%Y')
+            arrival = event.end.strftime('%d/%m/%Y')
+            reason = "Business" if extra.find("Business") > 0 else "Personal"
 
-        if event.summary.startswith("GB Holiday:"):
-            bank_holidays += days
-        if event.summary.startswith("PTO"):
-            personal_holiday += days
-        if event.summary.startswith("Sick"):
-            sick_days += days
-        if event.summary.startswith("Google"):
-            special_holidays += days
-        if event.summary.startswith("Working from"):
-            foreign_workdays += days
-
-    non_working_days = personal_holiday + sick_days + special_holidays
-
-    print(f"UK bank holidays: {bank_holidays}")
-    print(f"Sick days: {sick_days}")
-    print(f"Special Leave Days: {special_holidays}")
-    print(f"Foreign Workdays: {foreign_workdays}")
-    print(f"Nights sleeping outside the UK: {nights_outside_uk}")
-    print(f"----------------------------------------------------")
-    print(f"Nights in the UK: {total_days_in_year - nights_outside_uk}")
-    print(f"Days worked in UK: {total_working_days - non_working_days}")
+            # Because the calendar event includes the day one left and the day one returned
+            # the days absent is actually 2 fewer (departure & arrival days don't count)
+            full_days_absent = days - 2
+            print(
+                f"{location}\t{depart}\t{arrival}\t{reason}\t{full_days_absent}")
 
 
 def main():
